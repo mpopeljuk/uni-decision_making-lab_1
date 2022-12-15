@@ -1,0 +1,172 @@
+﻿@page "/"
+@using Blazorise
+
+<PageTitle>Index</PageTitle>
+
+<Card Width="Width.Is25" Margin="Margin.Is(margin)" Background="Background.Light">
+    <CardBody Padding="Padding.Is1">
+        <h3>Рекомендації до покупки авто</h3>
+    </CardBody>
+</Card>
+
+<Card Width="Width.Is25" Margin="Margin.Is(margin)" Background="Background.Info">
+    <CardBody Padding="Padding.Is1">
+        <h3>Вам є 18 років?</h3>
+        <RadioGroup TValue="string" Name="age" CheckedValueChanged="OnAgeValueChanged">
+            <Radio Value="@("false")">Ні</Radio>
+            <Radio Value="@("true")">Так</Radio>
+        </RadioGroup>
+    </CardBody>
+</Card>
+@if (showIncomeQuestion)
+{
+    <Card Width="Width.Is25" Margin="Margin.Is(margin)" Background="Background.Info" >
+        <CardBody Padding="Padding.Is1">
+            <h3>Середній заробіток більше 1000 $ ?</h3>
+            <RadioGroup Name="income" TValue="string" CheckedValueChanged="OnIncomeValueChanged">
+                <Radio Value="@("false")">Ні</Radio>
+                <Radio Value="@("true")">Так</Radio>
+            </RadioGroup>
+        </CardBody>
+    </Card>
+}
+@if (showLicenseQuestion)
+{
+        <Card Width="Width.Is25" Margin="Margin.Is(margin)" Background="Background.Info" >
+        <CardBody Padding="Padding.Is1">
+            <h3>У вас є водійське посвідчення?</h3>
+            <RadioGroup Name="license" TValue="string" CheckedValueChanged="OnLicenseValueChanged">
+                <Radio Value="@("false")">Ні</Radio>
+                <Radio Value="@("true")">Так</Radio>
+            </RadioGroup>
+        </CardBody>
+    </Card>
+}
+@if (showFutureLicenseQuestion)
+{
+        <Card Width="Width.Is25" Margin="Margin.Is(margin)" Background="Background.Info" >
+        <CardBody Padding="Padding.Is1">
+            <h3>Чи плануєте ви отримати водійське посвідчення в найближчий час?</h3>
+            <RadioGroup Name="futurelicense" TValue="string" CheckedValueChanged="OnFutureLicenseValueChanged">
+                <Radio Value="@("false")">Ні</Radio>
+                <Radio Value="@("true")">Так</Radio>
+            </RadioGroup>
+        </CardBody>
+    </Card>
+}
+
+
+@if (displayFinalApprove)
+{
+    <Card Width="Width.Is25" Margin="Margin.Is(margin)" Background="Background.Success" >
+        <CardBody Padding="Padding.Is1">
+            <h3>Авто рекомендовано до покупки</h3>
+        </CardBody>
+    </Card>
+}
+@if (displayFinalDecline)
+{
+    <Card Width="Width.Is25" Margin="Margin.Is(margin)" Background="Background.Warning" >
+        <CardBody Padding="Padding.Is1">
+            <h3>Покупку авто не рекомендовано</h3>
+        </CardBody>
+    </Card>
+}
+
+@code {
+    private const string margin = "mx-auto my-2";
+
+    private bool showAgeQuestion = true;
+    private string? isAgeValid = null;
+
+    private bool showIncomeQuestion = false;
+    private string? isIncomeValid = null;
+
+    private bool showLicenseQuestion = false;
+    private string? isLincenseValid = null;
+
+    private bool showFutureLicenseQuestion = false;
+    private string? isFutureLincenseValid = null;
+
+    private bool displayFinalApprove = false;
+    private bool displayFinalDecline = false;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        showAgeQuestion = true;
+    }
+
+    Task OnAgeValueChanged(string value)
+    {
+        isAgeValid = value;
+        showIncomeQuestion = isTrue(value);
+
+        isIncomeValid = isLincenseValid = isFutureLincenseValid = null;
+        showLicenseQuestion = showFutureLicenseQuestion = false;
+
+        ValidateEndCondition();
+
+        return Task.CompletedTask;
+    }
+
+    Task OnIncomeValueChanged(string value)
+    {
+        isIncomeValid = value;
+        showLicenseQuestion = isTrue(value);
+        isLincenseValid = isFutureLincenseValid = null;
+        showFutureLicenseQuestion = false;
+        ValidateEndCondition();
+        return Task.CompletedTask;
+    }
+
+    Task OnLicenseValueChanged(string value)
+    {
+        isLincenseValid = value;
+        showFutureLicenseQuestion = !isTrue(value);
+        isFutureLincenseValid = null;
+        ValidateEndCondition();
+        return Task.CompletedTask;
+    }
+
+    Task OnFutureLicenseValueChanged(string value)
+    {
+        isFutureLincenseValid = value;
+        ValidateEndCondition();
+        return Task.CompletedTask;
+    }
+
+    private void ValidateEndCondition()
+    {
+        displayFinalApprove = false;
+        displayFinalDecline = false;
+
+        if (!isTrue(isAgeValid))
+        {
+            displayFinalDecline = true;
+        }
+        if (isTrue(isAgeValid) && !isTrue(isIncomeValid) && !string.IsNullOrEmpty(isIncomeValid))
+        {
+            displayFinalDecline = true;
+        }
+        if (isTrue(isAgeValid) && isTrue(isIncomeValid) && isTrue(isLincenseValid))
+        {
+            displayFinalApprove = true;
+        }
+        if (isTrue(isAgeValid) && isTrue(isIncomeValid) && !isTrue(isLincenseValid) 
+            && !string.IsNullOrEmpty(isLincenseValid) && isTrue(isFutureLincenseValid))
+        {
+            displayFinalApprove = true;
+        }
+        if (isTrue(isAgeValid) && isTrue(isIncomeValid) && !isTrue(isLincenseValid) && !isTrue(isFutureLincenseValid) 
+            && !string.IsNullOrEmpty(isLincenseValid)  && !string.IsNullOrEmpty(isFutureLincenseValid))
+        {
+            displayFinalDecline = true;
+        }
+    }
+
+    private bool isTrue(string? val)
+    {
+        return val?.ToLower() == "true";
+    }
+}
